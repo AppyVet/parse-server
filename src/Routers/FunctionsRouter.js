@@ -107,19 +107,19 @@ export class FunctionsRouter extends PromiseRouter {
       },
       error: function (message) {
         // parse error, process away
-        if (message instanceof Parse.Error) {
-          return reject(message);
-        }
+//         if (message instanceof Parse.Error) {
+//           return reject(message);
+//         }
 
-        const code = Parse.Error.SCRIPT_FAILED;
-        // If it's an error, mark it as a script failed
-        if (typeof message === 'string') {
-          return reject(new Parse.Error(code, message));
-        }
-        if (message instanceof Error) {
-          message = message.message;
-        }
-        reject(new Parse.Error(code, message));
+//         const code = Parse.Error.SCRIPT_FAILED;
+//         // If it's an error, mark it as a script failed
+//         if (typeof message === 'string') {
+//           return reject(new Parse.Error(code, message));
+//         }
+//         if (message instanceof Error) {
+//           message = message.message;
+//         }
+        reject(message);
       },
       message: message,
     };
