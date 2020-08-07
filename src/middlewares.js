@@ -351,7 +351,7 @@ export function allowMethodOverride(req, res, next) {
 
 export function handleParseErrors(err, req, res, next) {
   const log = (req.config && req.config.loggerController) || defaultLogger;
-  if (err instanceof Parse.Error) {
+  if (err instanceof Error) {
     if (req.config && req.config.enableExpressErrorHandler) {
       return next(err);
     }
