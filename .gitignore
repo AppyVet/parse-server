@@ -16,7 +16,7 @@ coverage
 .nyc_output
 
 # docs output
-out 
+out
 docs
 
 # Grunt intermediate storage (http://gruntjs.com/creating-plugins#storing-task-files)
@@ -43,9 +43,6 @@ node_modules
 
 # visual studio code
 .vscode
-
-# Babel.js
-lib/
 
 # cache folder
 .cache
