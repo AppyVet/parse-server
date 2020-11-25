@@ -1,6 +1,6 @@
 {
   "name": "@appyvet/parse-server",
-  "version": "4.3.0",
+  "version": "4.3.1",
   "description": "A fork of Parse-compatible API server",
   "main": "lib/index.js",
   "repository": {
