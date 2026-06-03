@@ -20,8 +20,8 @@ COPY . .
 RUN npm ci --omit=dev --ignore-scripts \
     # Copy production node_modules aside for later
  && cp -R node_modules prod_node_modules \
-    # Install all dependencies
- && npm ci \
+    # Install all dependencies without lifecycle scripts; build is run explicitly below
+ && npm ci --ignore-scripts \
     # Run build steps
  && npm run build
 

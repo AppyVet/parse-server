@@ -470,7 +470,7 @@ export function handleParseErrors(err, req, res, next) {
       return next(err);
     }
 
-    if (!err.code) {
+    if (err.code === undefined || err.code === null) {
       res.status(500);
       res.json({ code: Parse.Error.INTERNAL_SERVER_ERROR, error: err.message });
       log.error('Parse error: ', err);
