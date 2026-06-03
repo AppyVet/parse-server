@@ -459,10 +459,24 @@ export function allowMethodOverride(req, res, next) {
 
 export function handleParseErrors(err, req, res, next) {
   const log = (req.config && req.config.loggerController) || defaultLogger;
-  if (err instanceof Error) {
+  if (err && err.status && err.message) {
+    res.status(err.status);
+    res.json({ error: err.message });
+    if (!(process && process.env.TESTING)) {
+      next(err);
+    }
+  } else if (err instanceof Error) {
     if (req.config && req.config.enableExpressErrorHandler) {
       return next(err);
     }
+
+    if (!err.code) {
+      res.status(500);
+      res.json({ code: Parse.Error.INTERNAL_SERVER_ERROR, error: err.message });
+      log.error('Parse error: ', err);
+      return;
+    }
+
     let httpStatus;
     // TODO: fill out this mapping
     switch (err.code) {
@@ -472,18 +486,15 @@ export function handleParseErrors(err, req, res, next) {
       case Parse.Error.OBJECT_NOT_FOUND:
         httpStatus = 404;
         break;
+      case Parse.Error.OPERATION_FORBIDDEN:
+        httpStatus = 403;
+        break;
       default:
         httpStatus = 400;
     }
     res.status(httpStatus);
     res.json({ code: err.code, error: err.message });
     log.error('Parse error: ', err);
-  } else if (err.status && err.message) {
-    res.status(err.status);
-    res.json({ error: err.message });
-    if (!(process && process.env.TESTING)) {
-      next(err);
-    }
   } else {
     log.error('Uncaught internal server error.', err, err.stack);
     res.status(500);
