@@ -946,6 +946,10 @@ describe('Email Verification Token Expiration: ', () => {
       username: 'resends_verification_token',
     }, {}, Auth.maintenance(config));
     // store this user before we make our email request
+    // Wait for async email dispatch callback from signUp flow.
+    for (let i = 0; i < 20 && sendVerificationEmailCallCount < 1; i++) {
+      await new Promise(resolve => setTimeout(resolve, 50));
+    }
     expect(sendVerificationEmailCallCount).toBe(1);
     await new Promise(resolve => {
       setTimeout(() => {
