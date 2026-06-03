@@ -8,7 +8,6 @@ on:
     paths-ignore:
       - '**/**.md'
 env:
-  NODE_VERSION: 22.12.0
   PARSE_SERVER_TEST_TIMEOUT: 20000
 permissions:
   actions: write
@@ -38,12 +37,16 @@ jobs:
     name: Node Engine Check
     timeout-minutes: 15
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - NODE_VERSION: 24.11.0
     steps:
       - uses: actions/checkout@v4
       - name: Use Node.js ${{ matrix.NODE_VERSION }}
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: ${{ matrix.NODE_VERSION }}
       - name: Install prod dependencies
         run: npm ci
       - name: Remove dev dependencies
@@ -54,12 +57,16 @@ jobs:
     name: Lint
     timeout-minutes: 15
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - NODE_VERSION: 24.11.0
     steps:
       - uses: actions/checkout@v4
       - name: Use Node.js ${{ matrix.NODE_VERSION }}
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: ${{ matrix.NODE_VERSION }}
       - name: Cache Node.js modules
         uses: actions/cache@v4
         with:
@@ -74,12 +81,16 @@ jobs:
     name: Check Definitions
     timeout-minutes: 5
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - NODE_VERSION: 24.11.0
     steps:
       - uses: actions/checkout@v4
       - name: Use Node.js ${{ matrix.NODE_VERSION }}
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: ${{ matrix.NODE_VERSION }}
       - name: Cache Node.js modules
         uses: actions/cache@v4
         with:
@@ -95,12 +106,16 @@ jobs:
     name: Circular Dependencies
     timeout-minutes: 5
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - NODE_VERSION: 24.11.0
     steps:
       - uses: actions/checkout@v4
       - name: Use Node.js ${{ matrix.NODE_VERSION }}
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: ${{ matrix.NODE_VERSION }}
       - name: Cache Node.js modules
         uses: actions/cache@v4
         with:
@@ -111,6 +126,33 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - run: npm run madge:circular
+  check-docs:
+    name: Docs
+    timeout-minutes: 5
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - NODE_VERSION: 24.11.0
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js ${{ matrix.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.NODE_VERSION }}
+      - name: Cache Node.js modules
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ matrix.NODE_VERSION }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-${{ matrix.NODE_VERSION }}-
+      - name: Install dependencies
+        run: npm ci
+      - name: Build source
+        run: npm run build
+      - name: Generate docs
+        run: npm run docs
   check-docker:
     name: Docker Build
     timeout-minutes: 15
@@ -132,53 +174,59 @@ jobs:
     name: NPM Lock File Version
     timeout-minutes: 5
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - NODE_VERSION: 24.11.0
     steps:
       - uses: actions/checkout@v4
-      - name: Check NPM lock file version
-        uses: mansona/npm-lockfile-version@v1
+      - name: Use Node.js ${{ matrix.NODE_VERSION }}
+        uses: actions/setup-node@v4
         with:
-          version: 2
+          node-version: ${{ matrix.NODE_VERSION }}
+      - name: Check NPM lock file version
+        run: |
+          version=$(node -e "console.log(require('./package-lock.json').lockfileVersion)")
+          if [ "$version" != "2" ]; then
+            echo "::error::Expected lockfileVersion 2, got $version"
+            exit 1
+          fi
+  check-types:
+    name: Check Types
+    timeout-minutes: 5
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - NODE_VERSION: 24.11.0
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js ${{ matrix.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.NODE_VERSION }}
+      - run: npm ci
+      - name: Build types
+        run: npm run build:types
+      - name: Test Types
+        run: npm run test:types
   check-mongo:
     strategy:
       matrix:
         include:
-          - name: MongoDB 4.2, ReplicaSet
-            MONGODB_VERSION: 4.2.25
-            MONGODB_TOPOLOGY: replset
-            NODE_VERSION: 22.12.0
-          - name: MongoDB 4.4, ReplicaSet
-            MONGODB_VERSION: 4.4.29
-            MONGODB_TOPOLOGY: replset
-            NODE_VERSION: 22.12.0
-          - name: MongoDB 5, ReplicaSet
-            MONGODB_VERSION: 5.0.26
-            MONGODB_TOPOLOGY: replset
-            NODE_VERSION: 22.12.0
-          - name: MongoDB 6, ReplicaSet
-            MONGODB_VERSION: 6.0.14
-            MONGODB_TOPOLOGY: replset
-            NODE_VERSION: 22.12.0
           - name: MongoDB 7, ReplicaSet
-            MONGODB_VERSION: 7.0.8
+            MONGODB_VERSION: 7.0.16
             MONGODB_TOPOLOGY: replset
-            NODE_VERSION: 22.12.0
+            NODE_VERSION: 24.11.0
           - name: MongoDB 8, ReplicaSet
-            MONGODB_VERSION: 8.0.0
+            MONGODB_VERSION: 8.0.4
             MONGODB_TOPOLOGY: replset
-            NODE_VERSION: 22.12.0
+            NODE_VERSION: 24.11.0
           - name: Redis Cache
             PARSE_SERVER_TEST_CACHE: redis
-            MONGODB_VERSION: 8.0.0
+            MONGODB_VERSION: 8.0.4
             MONGODB_TOPOLOGY: standalone
-            NODE_VERSION: 22.12.0
-          - name: Node 20
-            MONGODB_VERSION: 8.0.0
-            MONGODB_TOPOLOGY: standalone
-            NODE_VERSION: 20.15.1
-          - name: Node 18
-            MONGODB_VERSION: 8.0.0
-            MONGODB_TOPOLOGY: standalone
-            NODE_VERSION: 18.20.4
+            NODE_VERSION: 24.11.0
       fail-fast: false
     name: ${{ matrix.name }}
     timeout-minutes: 20
@@ -191,7 +239,6 @@ jobs:
     env:
       MONGODB_VERSION: ${{ matrix.MONGODB_VERSION }}
       MONGODB_TOPOLOGY: ${{ matrix.MONGODB_TOPOLOGY }}
-      MONGODB_STORAGE_ENGINE: ${{ matrix.MONGODB_STORAGE_ENGINE }}
       PARSE_SERVER_TEST_CACHE: ${{ matrix.PARSE_SERVER_TEST_CACHE }}
       NODE_VERSION: ${{ matrix.NODE_VERSION }}
     steps:
@@ -211,13 +258,7 @@ jobs:
             ${{ runner.os }}-node-${{ matrix.NODE_VERSION }}-
       - name: Install dependencies
         run: npm ci
-      - run: |
-          if [[ "$MONGODB_VERSION" == "4."* || "$MONGODB_VERSION" == "5."* ]]; then
-            wget http://nz2.archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2_amd64.deb
-            sudo dpkg -i libssl1.1_1.1.1f-1ubuntu2_amd64.deb
-          fi
-      - run: npm run pretest
-      - run: npm run coverage
+      - run: npm run coverage:mongodb
         env:
           CI: true
       - name: Upload code coverage
@@ -230,33 +271,15 @@ jobs:
     strategy:
       matrix:
         include:
-          - name: PostgreSQL 13, PostGIS 3.1
-            POSTGRES_IMAGE: postgis/postgis:13-3.1
-            NODE_VERSION: 22.12.0
-          - name: PostgreSQL 13, PostGIS 3.2
-            POSTGRES_IMAGE: postgis/postgis:13-3.2
-            NODE_VERSION: 22.12.0
-          - name: PostgreSQL 13, PostGIS 3.3
-            POSTGRES_IMAGE: postgis/postgis:13-3.3
-            NODE_VERSION: 22.12.0
-          - name: PostgreSQL 13, PostGIS 3.4
-            POSTGRES_IMAGE: postgis/postgis:13-3.4
-            NODE_VERSION: 22.12.0
-          - name: PostgreSQL 13, PostGIS 3.5
-            POSTGRES_IMAGE: postgis/postgis:13-3.5
-            NODE_VERSION: 22.12.0
-          - name: PostgreSQL 14, PostGIS 3.5
-            POSTGRES_IMAGE: postgis/postgis:14-3.5
-            NODE_VERSION: 22.12.0
-          - name: PostgreSQL 15, PostGIS 3.5
-            POSTGRES_IMAGE: postgis/postgis:15-3.5
-            NODE_VERSION: 22.12.0
           - name: PostgreSQL 16, PostGIS 3.5
             POSTGRES_IMAGE: postgis/postgis:16-3.5
-            NODE_VERSION: 22.12.0
+            NODE_VERSION: 24.11.0
           - name: PostgreSQL 17, PostGIS 3.5
             POSTGRES_IMAGE: postgis/postgis:17-3.5
-            NODE_VERSION: 22.12.0
+            NODE_VERSION: 24.11.0
+          - name: PostgreSQL 18, PostGIS 3.6
+            POSTGRES_IMAGE: postgis/postgis:18-3.6
+            NODE_VERSION: 24.11.0
       fail-fast: false
     name: ${{ matrix.name }}
     timeout-minutes: 20
