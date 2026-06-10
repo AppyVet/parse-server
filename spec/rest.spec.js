@@ -682,7 +682,10 @@ describe('rest create', () => {
     };
     const sessionLength = 3600, // 1 Hour ahead
       now = new Date(); // For reference later
+    const originalSessionLength = config.sessionLength;
+    const originalExpireInactiveSessions = config.expireInactiveSessions;
     config.sessionLength = sessionLength;
+    config.expireInactiveSessions = true;
 
     rest
       .create(config, auth.nobody(config), '_User', user)
@@ -709,6 +712,10 @@ describe('rest create', () => {
       .catch(err => {
         jfail(err);
         done();
+      })
+      .finally(() => {
+        config.sessionLength = originalSessionLength;
+        config.expireInactiveSessions = originalExpireInactiveSessions;
       });
   });
 
@@ -718,6 +725,8 @@ describe('rest create', () => {
       password: 'zxcv',
       foo: 'bar',
     };
+    const originalSessionLength = config.sessionLength;
+    const originalExpireInactiveSessions = config.expireInactiveSessions;
     config.expireInactiveSessions = false;
 
     rest
@@ -743,6 +752,10 @@ describe('rest create', () => {
         console.error(err);
         fail(err);
         done();
+      })
+      .finally(() => {
+        config.sessionLength = originalSessionLength;
+        config.expireInactiveSessions = originalExpireInactiveSessions;
       });
   });
 
