@@ -33,7 +33,7 @@ describe_only_db('mongo')('Parse.Query hint', () => {
 
     const collection = await config.database.adapter._adaptiveCollection('TestObject');
     let explain = await collection._rawFind({ _id: object.id }, { explain: true });
-    expect(explain.queryPlanner.winningPlan.stage).toBe('IDHACK');
+    expect(['IDHACK', 'EXPRESS_IXSCAN']).toContain(explain.queryPlanner.winningPlan.stage);
     explain = await collection._rawFind({ _id: object.id }, { hint: '_id_', explain: true });
     expect(explain.queryPlanner.winningPlan.stage).toBe('FETCH');
     expect(explain.queryPlanner.winningPlan.inputStage.indexName).toBe('_id_');
@@ -68,7 +68,7 @@ describe_only_db('mongo')('Parse.Query hint', () => {
 
     const collection = await config.database.adapter._adaptiveCollection('TestObject');
     let explain = await collection._rawFind({ _id: object.id }, { explain: true });
-    expect(explain.queryPlanner.winningPlan.stage).toBe('IDHACK');
+    expect(['IDHACK', 'EXPRESS_IXSCAN']).toContain(explain.queryPlanner.winningPlan.stage);
     explain = await collection._rawFind({ _id: object.id }, { hint: { _id: 1 }, explain: true });
     expect(explain.queryPlanner.winningPlan.stage).toBe('FETCH');
     expect(explain.queryPlanner.winningPlan.inputStage.keyPattern).toEqual({

@@ -1922,14 +1922,18 @@ describe('Parse.Query testing', () => {
       return new BoxedNumber({ number: i });
     };
     const numbers = [3, 1, 2].map(makeBoxedNumber);
+    const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
     numbers[0]
       .save()
+      .then(() => delay(10))
       .then(() => {
         return numbers[1].save();
       })
+      .then(() => delay(10))
       .then(() => {
         return numbers[2].save();
       })
+      .then(() => delay(50))
       .then(function () {
         const query = new Parse.Query(BoxedNumber);
         query.descending('createdAt');
@@ -1948,17 +1952,21 @@ describe('Parse.Query testing', () => {
       return new BoxedNumber({ number: i });
     };
     const numbers = [3, 1, 2].map(makeBoxedNumber);
+    const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
     numbers[0]
       .save()
+      .then(() => delay(10))
       .then(() => {
         return numbers[1].save();
       })
+      .then(() => delay(10))
       .then(() => {
         return numbers[2].save();
       })
+      .then(() => delay(20))
       .then(function () {
         numbers[1].set('number', 4);
-        numbers[1].save().then(function () {
+        numbers[1].save().then(() => delay(20)).then(function () {
           const query = new Parse.Query(BoxedNumber);
           query.ascending('_updated_at');
           query.find().then(function (results) {
@@ -1977,17 +1985,21 @@ describe('Parse.Query testing', () => {
       return new BoxedNumber({ number: i });
     };
     const numbers = [3, 1, 2].map(makeBoxedNumber);
+    const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
     numbers[0]
       .save()
+      .then(() => delay(10))
       .then(() => {
         return numbers[1].save();
       })
+      .then(() => delay(10))
       .then(() => {
         return numbers[2].save();
       })
+      .then(() => delay(20))
       .then(function () {
         numbers[1].set('number', 4);
-        numbers[1].save().then(function () {
+        numbers[1].save().then(() => delay(20)).then(function () {
           const query = new Parse.Query(BoxedNumber);
           query.descending('_updated_at');
           query.find().then(function (results) {

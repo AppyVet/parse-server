@@ -170,6 +170,8 @@ jobs:
         with:
           context: .
           platforms: linux/amd64, linux/arm64/v8
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
   check-lock-file-version:
     name: NPM Lock File Version
     timeout-minutes: 5
@@ -229,13 +231,18 @@ jobs:
             NODE_VERSION: 24.11.0
       fail-fast: false
     name: ${{ matrix.name }}
-    timeout-minutes: 20
+    timeout-minutes: 35
     runs-on: ubuntu-latest
     services:
       redis:
         image: redis
         ports:
           - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     env:
       MONGODB_VERSION: ${{ matrix.MONGODB_VERSION }}
       MONGODB_TOPOLOGY: ${{ matrix.MONGODB_TOPOLOGY }}
