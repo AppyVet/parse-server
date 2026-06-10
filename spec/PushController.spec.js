@@ -1147,18 +1147,13 @@ describe('PushController', () => {
       ).toBe('2007-04-05T14:30:00.000Z', 'Timezone offset');
 
       const noTimezone = new Date('2017-09-06T17:14:01.048');
-      let expectedHour = 17 + noTimezone.getTimezoneOffset() / 60;
-      let day = '06';
-      if (expectedHour >= 24) {
-        expectedHour = expectedHour - 24;
-        day = '07';
-      }
+      const expectedNoTimezone = noTimezone.toISOString().replace('Z', '');
       expect(
         PushController.formatPushTime({
           date: noTimezone,
           isLocalTime: true,
         })
-      ).toBe(`2017-09-${day}T${expectedHour.toString().padStart(2, '0')}:14:01.048`, 'No timezone');
+      ).toBe(expectedNoTimezone, 'No timezone');
       expect(
         PushController.formatPushTime({
           date: new Date('2017-09-06'),
@@ -1180,12 +1175,7 @@ describe('PushController', () => {
         },
       };
       const pushTime = '2017-09-06T17:14:01.048';
-      let expectedHour = 17 + new Date(pushTime).getTimezoneOffset() / 60;
-      let day = '06';
-      if (expectedHour >= 24) {
-        expectedHour = expectedHour - 24;
-        day = '07';
-      }
+      const expectedPushTime = new Date(pushTime).toISOString().replace('Z', '');
       const payload = {
         data: {
           alert: 'Hello World!',
@@ -1201,9 +1191,7 @@ describe('PushController', () => {
       const pushStatusId = await sendPush(payload, {}, config, auth);
       const pushStatus = await Parse.Push.getPushStatus(pushStatusId);
       expect(pushStatus.get('status')).toBe('scheduled');
-      expect(pushStatus.get('pushTime')).toBe(
-        `2017-09-${day}T${expectedHour.toString().padStart(2, '0')}:14:01.048`
-      );
+      expect(pushStatus.get('pushTime')).toBe(expectedPushTime);
     });
   });
 

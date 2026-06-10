@@ -223,14 +223,14 @@ describe('execution', () => {
     childProcess.stderr.on('data', data => {
       data = data.toString();
       if (!data.includes('[DEP0040] DeprecationWarning')) {
-        done.fail(data);
+        done(new Error(data));
       }
     });
   }
 
   function handleError(childProcess, done) {
     childProcess.on('error', err => {
-      done.fail(err);
+      done(err);
     });
   }
 
@@ -240,11 +240,14 @@ describe('execution', () => {
 
   afterEach(done => {
     if (childProcess) {
-      childProcess.on('close', () => {
+      childProcess.kill('SIGKILL');
+      // Give the OS time to release the port
+      setTimeout(() => {
         childProcess = undefined;
         done();
-      });
-      childProcess.kill();
+      }, 500);
+    } else {
+      done();
     }
   });
 

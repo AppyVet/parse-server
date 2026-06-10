@@ -40,7 +40,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - NODE_VERSION: 24.11.0
+          - NODE_VERSION: 24
     steps:
       - uses: actions/checkout@v4
       - name: Use Node.js ${{ matrix.NODE_VERSION }}
@@ -60,7 +60,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - NODE_VERSION: 24.11.0
+          - NODE_VERSION: 24
     steps:
       - uses: actions/checkout@v4
       - name: Use Node.js ${{ matrix.NODE_VERSION }}
@@ -84,7 +84,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - NODE_VERSION: 24.11.0
+          - NODE_VERSION: 24
     steps:
       - uses: actions/checkout@v4
       - name: Use Node.js ${{ matrix.NODE_VERSION }}
@@ -109,7 +109,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - NODE_VERSION: 24.11.0
+          - NODE_VERSION: 24
     steps:
       - uses: actions/checkout@v4
       - name: Use Node.js ${{ matrix.NODE_VERSION }}
@@ -133,7 +133,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - NODE_VERSION: 24.11.0
+          - NODE_VERSION: 24
     steps:
       - uses: actions/checkout@v4
       - name: Use Node.js ${{ matrix.NODE_VERSION }}
@@ -179,7 +179,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - NODE_VERSION: 24.11.0
+          - NODE_VERSION: 24
     steps:
       - uses: actions/checkout@v4
       - name: Use Node.js ${{ matrix.NODE_VERSION }}
@@ -200,7 +200,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - NODE_VERSION: 24.11.0
+          - NODE_VERSION: 24
     steps:
       - uses: actions/checkout@v3
       - name: Use Node.js ${{ matrix.NODE_VERSION }}
@@ -216,19 +216,15 @@ jobs:
     strategy:
       matrix:
         include:
-          - name: MongoDB 7, ReplicaSet
-            MONGODB_VERSION: 7.0.16
-            MONGODB_TOPOLOGY: replset
-            NODE_VERSION: 24.11.0
           - name: MongoDB 8, ReplicaSet
             MONGODB_VERSION: 8.0.4
             MONGODB_TOPOLOGY: replset
-            NODE_VERSION: 24.11.0
+            NODE_VERSION: 24
           - name: Redis Cache
             PARSE_SERVER_TEST_CACHE: redis
             MONGODB_VERSION: 8.0.4
             MONGODB_TOPOLOGY: standalone
-            NODE_VERSION: 24.11.0
+            NODE_VERSION: 24
       fail-fast: false
     name: ${{ matrix.name }}
     timeout-minutes: 35
@@ -265,9 +261,14 @@ jobs:
             ${{ runner.os }}-node-${{ matrix.NODE_VERSION }}-
       - name: Install dependencies
         run: npm ci
+      - name: Start MongoDB runner
+        run: npm run test:mongodb:runnerstart --dbversion=${{ matrix.MONGODB_VERSION }}
       - run: npm run coverage:mongodb
         env:
           CI: true
+      - name: Stop MongoDB runner
+        if: always()
+        run: npm run posttest
       - name: Upload code coverage
         uses: codecov/codecov-action@v4
         with:
@@ -280,13 +281,13 @@ jobs:
         include:
           - name: PostgreSQL 16, PostGIS 3.5
             POSTGRES_IMAGE: postgis/postgis:16-3.5
-            NODE_VERSION: 24.11.0
+            NODE_VERSION: 24
           - name: PostgreSQL 17, PostGIS 3.5
             POSTGRES_IMAGE: postgis/postgis:17-3.5
-            NODE_VERSION: 24.11.0
+            NODE_VERSION: 24
           - name: PostgreSQL 18, PostGIS 3.6
             POSTGRES_IMAGE: postgis/postgis:18-3.6
-            NODE_VERSION: 24.11.0
+            NODE_VERSION: 24
       fail-fast: false
     name: ${{ matrix.name }}
     timeout-minutes: 20

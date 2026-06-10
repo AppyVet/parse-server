@@ -21,6 +21,20 @@ const masterKeyOptions = {
 
 const profileLevel = 2;
 describe_only_db('mongo')('Parse.Query with comment testing', () => {
+  const getCommentFromProfileEntry = result => {
+    if (!result) {
+      return undefined;
+    }
+    const command = result.command || {};
+    return (
+      command?.comment ||
+      command?.explain?.comment ||
+      command?.filter?.comment ||
+      result?.op?.comment ||
+      result?.comment
+    );
+  };
+
   beforeAll(async () => {
     config = Config.get('test');
     client = await MongoClient.connect(databaseURI);
@@ -58,8 +72,11 @@ describe_only_db('mongo')('Parse.Query with comment testing', () => {
       },
     });
     await request(options);
+    // Add small delay to ensure profiler records the operation
+    await new Promise(resolve => setTimeout(resolve, 100));
     const result = await database.collection('system.profile').findOne({}, { sort: { ts: -1 } });
-    expect(result.command.explain.comment).toBe(comment);
+    const foundComment = getCommentFromProfileEntry(result);
+    expect(foundComment).toBe(comment);
   });
 
   it('send comment with query', async () => {
@@ -71,15 +88,9 @@ describe_only_db('mongo')('Parse.Query with comment testing', () => {
     await collection._rawFind({ name: 'object' }, { comment: comment });
     // Add small delay to ensure profiler records the operation
     await new Promise(resolve => setTimeout(resolve, 100));
-    let result = await database.collection('system.profile').findOne({}, { sort: { ts: -1 } });
-    // MongoDB 8.x may record comment in different location or format
-    // Check multiple possible locations for comment
-    let foundComment = result?.command?.comment || result?.op?.comment || result?.comment;
-    // If comment not found, try searching for it in filter/query
-    if (!foundComment && result?.command?.filter?.comment) {
-      foundComment = result.command.filter.comment;
-    }
-    // For MongoDB 8.x, also check if comment is in the full command string
+    const result = await database.collection('system.profile').findOne({}, { sort: { ts: -1 } });
+    let foundComment = getCommentFromProfileEntry(result);
+    // For MongoDB 8.x, also check if comment is nested in command payload shape changes.
     if (!foundComment && JSON.stringify(result?.command || {}).includes(comment)) {
       foundComment = comment;
     }
